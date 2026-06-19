@@ -35,13 +35,19 @@ class HangpersonGame
   # You can test it by running $ bundle exec irb -I. -r app.rb
   # And then in the irb: irb(main):001:0> HangpersonGame.get_random_word
   #  => "cooking"   <-- some random word
+  #
+  # The original watchout4snakes.com service is defunct, so we use the
+  # Datamuse API instead. It has no dedicated "random word" endpoint, so we
+  # query a spelling pattern of all wildcards ('?' matches any single letter)
+  # for a random word length and pick one of the results at random.
   def self.get_random_word
     require 'uri'
     require 'net/http'
-    uri = URI('http://watchout4snakes.com/wo4snakes/Random/RandomWord')
-    Net::HTTP.new('watchout4snakes.com').start { |http|
-      return http.post(uri, "").body
-    }
+    require 'json'
+    length = rand(5..7)
+    uri = URI("https://api.datamuse.com/words?max=1000&sp=#{'?' * length}")
+    words = JSON.parse(Net::HTTP.get(uri)).map { |entry| entry['word'] }
+    words.select { |w| w =~ /\A[a-z]+\z/ }.sample
   end
 
 end
